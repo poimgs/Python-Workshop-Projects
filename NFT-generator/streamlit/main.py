@@ -1,5 +1,5 @@
 import streamlit as st
-from .personal import create_composite_image
+from personal import create_composite_image
 
 # Create a title and sub-title
 st.title("NFT Generator")
