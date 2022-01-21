@@ -1,9 +1,15 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 
-def get_housing_prices(path="./HDB resale flat prices (1990-1999).csv"):
+def get_housing_prices(file_path="HDB resale flat prices (1990-1999).csv"):
+    # Get path to current directory
+    current_path = os.path.dirname(os.path.realpath(__file__))
+
+    # Get path to file
+    path = os.path.join(current_path, file_path)
     df = pd.read_csv(path)
 
     # Transform data into a data frame for me to visualise
