@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def get_housing_prices(path="HDB resale flat prices (1990-1999).csv"):
+def get_housing_prices(path="./HDB resale flat prices (1990-1999).csv"):
     df = pd.read_csv(path)
 
     # Transform data into a data frame for me to visualise
