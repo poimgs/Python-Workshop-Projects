@@ -1,6 +1,7 @@
 from distutils.command.upload import upload
 import streamlit as st
 import pandas as pd
+import pandas_profiling
 from streamlit_pandas_profiling import st_profile_report
 
 # Import resale housing prices into a data frame
