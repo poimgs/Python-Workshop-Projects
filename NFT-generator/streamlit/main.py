@@ -11,7 +11,7 @@ st.title("NFT Generator")
 
 # Check how many layers the user wants
 layers = st.slider(
-    "How many layers will each NFT image have?", 1, 10, 1,
+    "How many layers will each NFT image have?", min_value=2, max_value=10,
     help="take note that subsequent layers will be layered over the previous ones!"
 )
 
@@ -27,43 +27,50 @@ for i in range(layers):
 
 col1, col2 = st.columns(2)
 
-random_clicked = col1.button("Generate a random NFT image")
-collection_clicked = col2.button("Generate NFT collection")
+conditions = []
+for layer in layer_images:
+    conditions.append(len(layer) > 0)
 
-if random_clicked:
-    composite_image = Image.new("RGBA", (500, 500))
+if all(conditions):
+    random_clicked = col1.button("Generate a random NFT image")
+    collection_clicked = col2.button("Generate NFT collection")
 
-    for layer in layer_images:
-        random_choice = Image.open(random.choice(layer))
-        composite_image.paste(random_choice, (0, 0), random_choice)
+    if random_clicked:
+        composite_image = Image.new("RGBA", (500, 500))
 
-    st.image(composite_image)
+        for layer in layer_images:
+            random_choice = Image.open(random.choice(layer))
+            composite_image.paste(random_choice, (0, 0), random_choice)
 
-if collection_clicked:
-    with st.spinner("Generating NFT collection..."):
-        if os.path.exists("NFT-collection"):
-            shutil.rmtree("NFT-collection")
-        os.mkdir("NFT-collection")
+        st.image(composite_image)
 
-        all_combinations = [p for p in product(*layer_images)]
-        for i, combinations in enumerate(all_combinations):
-            composite_image = Image.new("RGBA", (500, 500))
+    if collection_clicked:
+        with st.spinner("Generating NFT collection..."):
+            if os.path.exists("NFT-collection"):
+                shutil.rmtree("NFT-collection")
+            os.mkdir("NFT-collection")
 
-            for layer in combinations:
-                image = Image.open(layer)
-                composite_image.paste(image, (0, 0), image)
+            all_combinations = [p for p in product(*layer_images)]
+            for i, combinations in enumerate(all_combinations):
+                composite_image = Image.new("RGBA", (500, 500))
 
-                composite_image.save(f"NFT-collection/{i+1}.png")
+                for layer in combinations:
+                    image = Image.open(layer)
+                    composite_image.paste(image, (0, 0), image)
 
-        with ZipFile("NFT-collection.zip", "w") as zip:
-            for root, dirs, files in os.walk("NFT-collection"):
-                for file in files:
-                    zip.write(os.path.join(root, file))
+                    composite_image.save(f"NFT-collection/{i+1}.png")
 
-        with open("NFT-collection.zip", "rb") as f:
-            col2.download_button(
-                data=f,
-                label="Download NFT-collection.zip",
-                file_name="NFT-collection.zip",
-                mime="application/zip",
-            )
+            with ZipFile("NFT-collection.zip", "w") as zip:
+                for root, dirs, files in os.walk("NFT-collection"):
+                    for file in files:
+                        zip.write(os.path.join(root, file))
+
+            with open("NFT-collection.zip", "rb") as f:
+                col2.download_button(
+                    data=f,
+                    label="Download NFT-collection.zip",
+                    file_name="NFT-collection.zip",
+                    mime="application/zip",
+                )
+else:
+    st.write("Please upload at least one image for each layer")
