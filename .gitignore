@@ -1,5 +1,6 @@
 env
 __pycache__
+.dccache
 *.png
 HDB resale flat prices (1990-2014).csv
-.dccache
+NFT-collection*

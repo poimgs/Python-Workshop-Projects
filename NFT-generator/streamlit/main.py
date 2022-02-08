@@ -1,56 +1,69 @@
 import streamlit as st
-from personal import create_composite_image
+from PIL import Image
+from itertools import product
+from zipfile import ZipFile
+import random
+import os
+import shutil
 
 # Create a title and sub-title
 st.title("NFT Generator")
-st.write("Create a new NFT with your own images!")
 
-# Create upload buttons to upload images
-faces = st.file_uploader(
-    "Upload faces", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
-)
-hairs = st.file_uploader(
-    "Upload hairs", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
-)
-ears = st.file_uploader(
-    "Upload ears", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
-)
-eyes = st.file_uploader(
-    "Upload eyes", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
-)
-noses = st.file_uploader(
-    "Upload noses", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
-)
-mouths = st.file_uploader(
-    "Upload mouths", 
-    type=["png", "jpg", "jpeg"], 
-    accept_multiple_files=True
+# Check how many layers the user wants
+layers = st.slider(
+    "How many layers will each NFT image have?", 1, 10, 1,
+    help="take note that subsequent layers will be layered over the previous ones!"
 )
 
-# Create two columns for two buttons 
-refresh_col, download_col = st.columns(2)
+layer_images = []
 
-refresh = refresh_col.button('Click to generate a new image!')
+for i in range(layers):
+    images = st.file_uploader(
+        f"Layer {i+1}",
+        type=["png", "jpg", "jpeg"],
+        accept_multiple_files=True,
+    )
+    layer_images.append(images)
 
-# Generate NFT image if button clicked
-if refresh:
-    if faces and hairs and ears and eyes and noses and mouths:
-        composite_image = create_composite_image(faces, hairs, ears, eyes, noses, mouths)
-        st.image(composite_image)
+col1, col2 = st.columns(2)
 
-        # Save image as png and provide download button to download NFT image
-        composite_image.save('NFT.png')
-        with open("NFT.png", "rb") as file:
-            clicked = download_col.download_button("Download your NFT image", file, "NFT.png")
-    else:
-        st.write("Upload images for all components before generating!")
+random_clicked = col1.button("Generate a random NFT image")
+collection_clicked = col2.button("Generate NFT collection")
+
+if random_clicked:
+    composite_image = Image.new("RGBA", (500, 500))
+
+    for layer in layer_images:
+        random_choice = Image.open(random.choice(layer))
+        composite_image.paste(random_choice, (0, 0), random_choice)
+
+    st.image(composite_image)
+
+if collection_clicked:
+    with st.spinner("Generating NFT collection..."):
+        if os.path.exists("NFT-collection"):
+            shutil.rmtree("NFT-collection")
+        os.mkdir("NFT-collection")
+
+        all_combinations = [p for p in product(*layer_images)]
+        for i, combinations in enumerate(all_combinations):
+            composite_image = Image.new("RGBA", (500, 500))
+
+            for layer in combinations:
+                image = Image.open(layer)
+                composite_image.paste(image, (0, 0), image)
+
+                composite_image.save(f"NFT-collection/{i+1}.png")
+
+        with ZipFile("NFT-collection.zip", "w") as zip:
+            for root, dirs, files in os.walk("NFT-collection"):
+                for file in files:
+                    zip.write(os.path.join(root, file))
+
+        with open("NFT-collection.zip", "rb") as f:
+            col2.download_button(
+                data=f,
+                label="Download NFT-collection.zip",
+                file_name="NFT-collection.zip",
+                mime="application/zip",
+            )
