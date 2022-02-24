@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 
 
-def get_housing_prices(file_path="./HDB resale flat prices (1990-1999).csv"):
+def get_housing_prices(file_path="./visualise-housing-prices/streamlit/HDB resale flat prices (1990-1999).csv"):
     # Transform data into a data frame for me to visualise
     df = pd.read_csv(file_path)
 
