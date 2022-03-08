@@ -1,12 +1,26 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import requests
+# import os
 
 
-def get_housing_prices(file_path="./visualise-housing-prices/streamlit/HDB resale flat prices (1990-1999).csv"):
+# def get_housing_prices(file_path="./visualise-housing-prices/streamlit/HDB resale flat prices (1990-1999).csv"):
+#     # Transform data into a data frame for me to visualise
+#     df = pd.read_csv(file_path)
+
+#     # Transform column data type into appropriate data type for analysis
+#     df['month'] = pd.to_datetime(df['month'])
+#     df['resale_price'] = df['resale_price'].astype(float)
+
+#     return df
+
+@st.cache
+def get_housing_prices(url="https://data.gov.sg/api/action/datastore_search?resource_id=f1765b54-a209-4718-8d38-a39237f502b3&limit=1000000000"):
     # Transform data into a data frame for me to visualise
-    df = pd.read_csv(file_path)
+    res = requests.get(url)
+    data = res.json()['result']['records']
+    df = pd.DataFrame(data)
 
     # Transform column data type into appropriate data type for analysis
     df['month'] = pd.to_datetime(df['month'])
@@ -64,7 +78,7 @@ def plot_year_to_resale_prices(mean_resale_price_df):
 
     # Set title and labels
     ax.set_title("Resale Price Trend")
-    ax.set_xlabel("Month")
+    ax.set_xlabel("Year")
     ax.set_ylabel("Resale Price")
 
     # Show the plot
