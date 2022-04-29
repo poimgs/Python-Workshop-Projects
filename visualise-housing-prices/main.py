@@ -2,29 +2,36 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
-# import os
 
-
-# def get_housing_prices(file_path="./visualise-housing-prices/streamlit/HDB resale flat prices (1990-1999).csv"):
-#     # Transform data into a data frame for me to visualise
-#     df = pd.read_csv(file_path)
-
-#     # Transform column data type into appropriate data type for analysis
-#     df['month'] = pd.to_datetime(df['month'])
-#     df['resale_price'] = df['resale_price'].astype(float)
-
-#     return df
 
 @st.cache
-def get_housing_prices(url="https://data.gov.sg/api/action/datastore_search?resource_id=f1765b54-a209-4718-8d38-a39237f502b3&limit=1000000000"):
+def get_housing_prices():
     # Transform data into a data frame for me to visualise
-    res = requests.get(url)
-    data = res.json()['result']['records']
-    df = pd.DataFrame(data)
+    resale_prices_resource_ids = [
+        "adbbddd3-30e2-445f-a123-29bee150a6fe",  # 1990 - 1999
+        "8c00bf08-9124-479e-aeca-7cc411d884c4",  # 2000 - 2012
+        "83b2fc37-ce8c-4df4-968b-370fd818138b",  # 2012 - 2014
+        "1b702208-44bf-4829-b620-4615ee19b57c",  # 2015 - 2016
+        "f1765b54-a209-4718-8d38-a39237f502b3",  # 2017 - now
+    ]
+
+    # Get data from API
+    dataframes = []
+
+    for resource_id in resale_prices_resource_ids:
+        url = f"https://data.gov.sg/api/action/datastore_search?resource_id={resource_id}&limit=10000000000"
+        res = requests.get(url)
+        data = res.json()['result']['records']
+        df = pd.DataFrame(data)
+        dataframes.append(df)
+
+    # Combine dataframes into one
+    df = pd.concat(dataframes)
 
     # Transform column data type into appropriate data type for analysis
     df['month'] = pd.to_datetime(df['month'])
     df['resale_price'] = df['resale_price'].astype(float)
+    df['flat_type'] = df['flat_type'].str.replace('MULTI GENERATION', 'MULTI-GENERATION')
 
     return df
 
@@ -60,7 +67,8 @@ def transform_df(df, flat_type, town):
         df = df[df['town'] == town]
 
     mean_resale_price_df = df.groupby(['month']).agg(
-        {'resale_price': 'mean'}).reset_index()
+        {'resale_price': 'mean'}
+    ).reset_index()
 
     return mean_resale_price_df
 
